@@ -10,14 +10,14 @@
 
   <Identity
     Name="dbfbf87b-1d83-42df-8525-84bccbb8176b"
-    Publisher="CN=Magicked"
+    Publisher="CN=Madgique"
     Version="1.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="dbfbf87b-1d83-42df-8525-84bccbb8176b" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>Dofus Multi Organizer</DisplayName>
-    <PublisherDisplayName>Magicked</PublisherDisplayName>
+    <PublisherDisplayName>Madgique</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -50,7 +50,7 @@
         <!-- Démarrage automatique avec Windows -->
         <uap5:Extension
           Category="windows.startupTask"
-          Executable="DofusOrganizer.exe"
+          Executable="DofusMultiOrganizer.exe"
           EntryPoint="Windows.FullTrustApplication">
           <uap5:StartupTask
             TaskId="DofusOrganizerStartup"
