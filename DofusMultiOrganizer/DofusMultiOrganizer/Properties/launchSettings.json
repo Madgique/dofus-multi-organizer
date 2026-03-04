@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DofusMultiOrganizer (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "DofusMultiOrganizer (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

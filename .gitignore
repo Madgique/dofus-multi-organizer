@@ -1,0 +1,44 @@
+# Build outputs
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.cache
+
+# MSIX / AppX packaging
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.msix
+*.msixbundle
+*.appxbundle
+*.appxupload
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+.nuget/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# User settings (settings.json est dans %LocalAppData%, pas dans le repo)
+# Fichiers de logs locaux
+*.log
+
+# Claude Code
+.claude/
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS (si collaborateurs Mac)
+.DS_Store

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+
+  <!-- System tray -->
+  <data name="Tray_OpenSettings" xml:space="preserve"><value>Configuración</value></data>
+  <data name="Tray_StartWithWindows" xml:space="preserve"><value>Iniciar con Windows</value></data>
+  <data name="Tray_Quit" xml:space="preserve"><value>Salir</value></data>
+
+  <!-- Settings window -->
+  <data name="Settings_WindowsTitle.Text" xml:space="preserve"><value>Ventanas de Dofus</value></data>
+  <data name="Settings_Refresh.ToolTipService.ToolTip" xml:space="preserve"><value>Actualizar lista</value></data>
+  <data name="Settings_ColCharacter.Text" xml:space="preserve"><value>Personaje</value></data>
+  <data name="Settings_ColHotkey.Text" xml:space="preserve"><value>Atajo</value></data>
+  <data name="Settings_GlobalHotkeys.Text" xml:space="preserve"><value>Atajos globales</value></data>
+  <data name="Settings_NextWindow.Text" xml:space="preserve"><value>Siguiente ventana</value></data>
+  <data name="Settings_PrevWindow.Text" xml:space="preserve"><value>Ventana anterior</value></data>
+  <data name="Settings_Language.Text" xml:space="preserve"><value>Idioma</value></data>
+  <data name="Settings_Startup.Header" xml:space="preserve"><value>Iniciar con Windows</value></data>
+  <data name="WindowRow_HotkeyPlaceholder" xml:space="preserve"><value>ej: F5, B, Ctrl+1</value></data>
+  <data name="WindowRow_HotkeyTooltip" xml:space="preserve"><value>Atajo directo para enfocar esta ventana</value></data>
+</root>
