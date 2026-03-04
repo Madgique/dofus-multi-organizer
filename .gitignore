@@ -32,6 +32,9 @@ project.lock.json
 # Fichiers de logs locaux
 *.log
 
+# Certificat de signature (clé privée — ne jamais committer)
+signing.pfx
+
 # Claude Code
 .claude/
 
