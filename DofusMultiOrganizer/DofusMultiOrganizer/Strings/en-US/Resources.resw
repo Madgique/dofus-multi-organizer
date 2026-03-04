@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+
+  <!-- System tray -->
+  <data name="Tray_OpenSettings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Tray_StartWithWindows" xml:space="preserve"><value>Start with Windows</value></data>
+  <data name="Tray_Quit" xml:space="preserve"><value>Quit</value></data>
+
+  <!-- Settings window -->
+  <data name="Settings_WindowsTitle.Text" xml:space="preserve"><value>Dofus Windows</value></data>
+  <data name="Settings_Refresh.ToolTipService.ToolTip" xml:space="preserve"><value>Refresh list</value></data>
+  <data name="Settings_ColCharacter.Text" xml:space="preserve"><value>Character</value></data>
+  <data name="Settings_ColHotkey.Text" xml:space="preserve"><value>Hotkey</value></data>
+  <data name="Settings_GlobalHotkeys.Text" xml:space="preserve"><value>Global Hotkeys</value></data>
+  <data name="Settings_NextWindow.Text" xml:space="preserve"><value>Next Window</value></data>
+  <data name="Settings_PrevWindow.Text" xml:space="preserve"><value>Previous Window</value></data>
+  <data name="Settings_Language.Text" xml:space="preserve"><value>Language</value></data>
+  <data name="Settings_Startup.Header" xml:space="preserve"><value>Start with Windows</value></data>
+  <data name="WindowRow_HotkeyPlaceholder" xml:space="preserve"><value>e.g. F5, B, Ctrl+1</value></data>
+  <data name="WindowRow_HotkeyTooltip" xml:space="preserve"><value>Direct hotkey to focus this window</value></data>
+</root>
