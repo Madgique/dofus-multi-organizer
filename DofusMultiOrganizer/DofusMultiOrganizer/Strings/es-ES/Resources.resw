@@ -22,4 +22,21 @@
   <data name="Settings_Startup.Header" xml:space="preserve"><value>Iniciar con Windows</value></data>
   <data name="WindowRow_HotkeyPlaceholder" xml:space="preserve"><value>ej: F5, B, Ctrl+1</value></data>
   <data name="WindowRow_HotkeyTooltip" xml:space="preserve"><value>Atajo directo para enfocar esta ventana</value></data>
+
+  <!-- Alternar modo -->
+  <data name="Settings_ModeToggle.OffContent" xml:space="preserve"><value>Retro</value></data>
+  <data name="Settings_ModeToggle.OnContent" xml:space="preserve"><value>Unity</value></data>
+
+  <!-- Opciones de comportamiento -->
+  <data name="Settings_IgnoreMinimized.Header" xml:space="preserve"><value>Ignorar ventanas minimizadas</value></data>
+  <data name="Settings_AutoFocus.Header" xml:space="preserve"><value>Enfoque automático en turno (Retro)</value></data>
+
+  <!-- Indicación reinicio de idioma -->
+  <data name="Settings_LangRestartHint.Text" xml:space="preserve"><value>↻ Reinicia para aplicar</value></data>
+
+  <!-- Tema -->
+  <data name="Settings_ThemeLabel.Text" xml:space="preserve"><value>Tema</value></data>
+  <data name="Settings_Theme_System.Content" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Settings_Theme_Light.Content" xml:space="preserve"><value>Claro</value></data>
+  <data name="Settings_Theme_Dark.Content" xml:space="preserve"><value>Oscuro</value></data>
 </root>

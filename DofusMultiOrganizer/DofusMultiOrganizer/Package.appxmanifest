@@ -11,7 +11,7 @@
   <Identity
     Name="dbfbf87b-1d83-42df-8525-84bccbb8176b"
     Publisher="CN=Madgique"
-    Version="1.0.0.0" />
+    Version="1.1.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="dbfbf87b-1d83-42df-8525-84bccbb8176b" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -64,5 +64,7 @@
   <Capabilities>
     <!-- Nécessaire pour QueryFullProcessImageName et SetForegroundWindow cross-process -->
     <rescap:Capability Name="runFullTrust" />
+    <!-- Nécessaire pour lire les notifications Windows (UserNotificationListener) -->
+    <rescap:Capability Name="userNotificationListener" />
   </Capabilities>
 </Package>

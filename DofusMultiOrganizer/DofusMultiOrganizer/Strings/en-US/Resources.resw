@@ -22,4 +22,21 @@
   <data name="Settings_Startup.Header" xml:space="preserve"><value>Start with Windows</value></data>
   <data name="WindowRow_HotkeyPlaceholder" xml:space="preserve"><value>e.g. F5, B, Ctrl+1</value></data>
   <data name="WindowRow_HotkeyTooltip" xml:space="preserve"><value>Direct hotkey to focus this window</value></data>
+
+  <!-- Mode toggle -->
+  <data name="Settings_ModeToggle.OffContent" xml:space="preserve"><value>Retro</value></data>
+  <data name="Settings_ModeToggle.OnContent" xml:space="preserve"><value>Unity</value></data>
+
+  <!-- Behavior options -->
+  <data name="Settings_IgnoreMinimized.Header" xml:space="preserve"><value>Ignore minimized windows</value></data>
+  <data name="Settings_AutoFocus.Header" xml:space="preserve"><value>Auto-focus on turn (Retro)</value></data>
+
+  <!-- Language restart hint -->
+  <data name="Settings_LangRestartHint.Text" xml:space="preserve"><value>↻ Restart to apply</value></data>
+
+  <!-- Theme -->
+  <data name="Settings_ThemeLabel.Text" xml:space="preserve"><value>Theme</value></data>
+  <data name="Settings_Theme_System.Content" xml:space="preserve"><value>System</value></data>
+  <data name="Settings_Theme_Light.Content" xml:space="preserve"><value>Light</value></data>
+  <data name="Settings_Theme_Dark.Content" xml:space="preserve"><value>Dark</value></data>
 </root>

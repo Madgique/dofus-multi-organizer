@@ -29,4 +29,13 @@ public class AppSettings
     /// <summary>Dimensions de la fenêtre settings (sauvegardées à la fermeture).</summary>
     public int WindowWidth { get; set; } = 540;
     public int WindowHeight { get; set; } = 620;
+
+    /// <summary>Mode de détection : Unity ou Rétro.</summary>
+    public DofusMode DofusMode { get; set; } = DofusMode.Unity;
+
+    /// <summary>
+    /// Si true (mode Rétro uniquement), met automatiquement au premier plan la fenêtre
+    /// du personnage dont c'est le tour, à la réception de la notification Windows.
+    /// </summary>
+    public bool AutoFocusOnTurn { get; set; } = false;
 }

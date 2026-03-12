@@ -7,6 +7,7 @@
     xmlns:tb="using:H.NotifyIcon"
     xmlns:controls="using:DofusOrganizer.Views.Controls"
     xmlns:vm="using:DofusOrganizer.ViewModels"
+    xmlns:converters="using:DofusOrganizer.Converters"
     mc:Ignorable="d"
     Title="Dofus Multi Organizer">
 
@@ -55,12 +56,14 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Titre + bouton refresh -->
+            <!-- Titre + toggle mode + bouton refresh -->
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
@@ -69,11 +72,17 @@
                     Text="Fenêtres Dofus"
                     Style="{ThemeResource SubtitleTextBlockStyle}"
                     VerticalAlignment="Center" />
-                <Button
+                <ToggleSwitch
                     Grid.Column="1"
+                    x:Uid="Settings_ModeToggle"
+                    IsOn="{x:Bind ViewModel.IsUnityMode, Mode=TwoWay}"
+                    VerticalAlignment="Center"
+                    Margin="0,0,8,0" />
+                <Button
+                    Grid.Column="2"
+                    x:Uid="Settings_Refresh"
                     Command="{x:Bind ViewModel.RefreshDofusWindowsCommand}"
-                    Style="{ThemeResource DefaultButtonStyle}"
-                    ToolTipService.ToolTip="Rafraîchir">
+                    Style="{ThemeResource DefaultButtonStyle}">
                     <FontIcon Glyph="&#xE72C;" FontSize="14" />
                 </Button>
             </Grid>
@@ -135,9 +144,14 @@
                     </StackPanel>
                 </Grid>
                 <ToggleSwitch
-                    Header="Ignorer les fenêtres minimisées"
+                    x:Uid="Settings_IgnoreMinimized"
                     IsOn="{x:Bind ViewModel.IgnoreMinimizedWindows, Mode=TwoWay}"
                     Margin="0,4,0,0" />
+                <ToggleSwitch
+                    x:Uid="Settings_AutoFocus"
+                    IsOn="{x:Bind ViewModel.AutoFocusOnTurn, Mode=TwoWay}"
+                    Visibility="{x:Bind ViewModel.RetroOptionsVisibility, Mode=OneWay}"
+                    Margin="0,0,0,0" />
             </StackPanel>
 
             <!-- Langue + Thème + Démarrage avec Windows -->
@@ -158,19 +172,19 @@
                         <ComboBoxItem Content="Español" />
                     </ComboBox>
                     <TextBlock
-                        Text="↻ Redémarrez pour appliquer"
+                        x:Uid="Settings_LangRestartHint"
                         FontSize="10"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                         Margin="0,2,0,0" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Spacing="4">
-                    <TextBlock Text="Thème" Style="{ThemeResource CaptionTextBlockStyle}" />
+                    <TextBlock x:Uid="Settings_ThemeLabel" Style="{ThemeResource CaptionTextBlockStyle}" />
                     <ComboBox
                         SelectedIndex="{x:Bind ViewModel.AppTheme, Mode=TwoWay}"
                         HorizontalAlignment="Stretch">
-                        <ComboBoxItem Content="Système" />
-                        <ComboBoxItem Content="Clair" />
-                        <ComboBoxItem Content="Sombre" />
+                        <ComboBoxItem x:Uid="Settings_Theme_System" />
+                        <ComboBoxItem x:Uid="Settings_Theme_Light" />
+                        <ComboBoxItem x:Uid="Settings_Theme_Dark" />
                     </ComboBox>
                 </StackPanel>
                 <ToggleSwitch
@@ -180,6 +194,15 @@
                     IsOn="{x:Bind ViewModel.StartWithWindows, Mode=TwoWay}"
                     VerticalAlignment="Bottom" />
             </Grid>
+
+            <!-- Version de l'application -->
+            <TextBlock
+                Grid.Row="5"
+                Text="{x:Bind ViewModel.AppVersion}"
+                HorizontalAlignment="Right"
+                FontSize="10"
+                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                Margin="0,4,0,0" />
 
         </Grid>
     </Grid>
