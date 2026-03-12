@@ -20,7 +20,7 @@ Le fichier solution est `.slnx` (nouveau format VS 2022), pas `.sln`.
 - **Patterns** : MVVM (CommunityToolkit.Mvvm 8.3.2), DI (Microsoft.Extensions.DependencyInjection 9.0.2)
 - **Tray** : H.NotifyIcon.WinUI 2.2.0
 - **Win32 P/Invoke** : CsWin32 0.3.106 + P/Invoke manuels pour SetWindowLongPtrW/CallWindowProcW
-- **Identity MSIX** : Name="dbfbf87b-1d83-42df-8525-84bccbb8176b", Publisher="CN=Magicked"
+- **Identity MSIX** : Name="dbfbf87b-1d83-42df-8525-84bccbb8176b", Publisher="CN=Madgique"
 
 ## Structure fichiers clés
 ```
