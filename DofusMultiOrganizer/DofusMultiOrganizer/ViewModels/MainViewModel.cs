@@ -1,10 +1,10 @@
-using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DofusOrganizer.Models;
 using DofusOrganizer.Services;
 using DofusOrganizer.Services.Interfaces;
 using System.Collections.ObjectModel;
+using Microsoft.UI.Dispatching;
 using Windows.ApplicationModel;
 
 namespace DofusOrganizer.ViewModels;
@@ -15,6 +15,8 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IHotkeyService _hotkeys;
     private readonly IWindowFocusService _focus;
     private readonly ISettingsService _settings;
+    private readonly INotificationListenerService _notificationListener;
+    private readonly DispatcherQueue _dispatcherQueue;
 
     [ObservableProperty]
     private ObservableCollection<DofusWindowViewModel> _dofusWindows = [];
@@ -37,6 +39,30 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private int _appTheme;
 
+    [ObservableProperty]
+    private bool _isUnityMode = true;
+
+    [ObservableProperty]
+    private bool _autoFocusOnTurn;
+
+    /// <summary>Visibilité des options Rétro-only dans le XAML (x:Bind ne supporte pas les converters sur Window).</summary>
+    public Microsoft.UI.Xaml.Visibility RetroOptionsVisibility =>
+        IsUnityMode ? Microsoft.UI.Xaml.Visibility.Collapsed : Microsoft.UI.Xaml.Visibility.Visible;
+
+    /// <summary>Version de l'application lue depuis le package MSIX (ex: "v1.1.0").</summary>
+    public string AppVersion
+    {
+        get
+        {
+            try
+            {
+                var v = Package.Current.Id.Version;
+                return $"v{v.Major}.{v.Minor}.{v.Build}";
+            }
+            catch { return string.Empty; }
+        }
+    }
+
     // Textes localisés pour le menu tray (mis à jour selon la langue)
     public string OpenSettingsText => GetLocalizedString("Tray_OpenSettings");
     public string QuitText => GetLocalizedString("Tray_Quit");
@@ -46,14 +72,18 @@ public sealed partial class MainViewModel : ObservableObject
         IWindowDetectionService detection,
         IHotkeyService hotkeys,
         IWindowFocusService focus,
-        ISettingsService settings)
+        ISettingsService settings,
+        INotificationListenerService notificationListener)
     {
         _detection = detection;
         _hotkeys = hotkeys;
         _focus = focus;
         _settings = settings;
+        _notificationListener = notificationListener;
+        _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
         _hotkeys.HotkeyTriggered += OnHotkeyTriggered;
+        _notificationListener.NotificationTextReceived += OnNotificationTextReceived;
         DofusWindows.CollectionChanged += OnWindowOrderChanged;
     }
 
@@ -76,6 +106,8 @@ public sealed partial class MainViewModel : ObservableObject
         SelectedLanguageIndex = appSettings.LanguageIndex;
         IgnoreMinimizedWindows = appSettings.IgnoreMinimizedWindows;
         AppTheme = appSettings.AppTheme;
+        IsUnityMode = appSettings.DofusMode == DofusMode.Unity;
+        AutoFocusOnTurn = appSettings.AutoFocusOnTurn;
         _windowWidth = appSettings.WindowWidth;
         _windowHeight = appSettings.WindowHeight;
 
@@ -83,6 +115,10 @@ public sealed partial class MainViewModel : ObservableObject
 
         RefreshStartupState();
         RefreshDofusWindows();
+
+        // Démarrer le listener si l'option était activée en mode Rétro
+        if (!IsUnityMode && AutoFocusOnTurn)
+            _ = StartNotificationListenerAsync();
 
         // Créer le fichier settings.json dès le premier lancement
         SaveSettings();
@@ -94,7 +130,7 @@ public sealed partial class MainViewModel : ObservableObject
         // Désabonner temporairement pour éviter les sauvegardes pendant le rebuild
         DofusWindows.CollectionChanged -= OnWindowOrderChanged;
 
-        var detected = _detection.DetectDofusWindows();
+        var detected = _detection.DetectDofusWindows(IsUnityMode ? DofusMode.Unity : DofusMode.Retro);
         var appSettings = _settings.Load();
 
         // Reconstruire dans l'ordre sauvegardé
@@ -162,6 +198,70 @@ public sealed partial class MainViewModel : ObservableObject
         SaveSettings();
     }
 
+    partial void OnIsUnityModeChanged(bool value)
+    {
+        // Toujours notifier la visibilité, même pendant l'init (avant _isInitialized)
+        // → corrige l'affichage au démarrage quand le mode Rétro est sauvegardé
+        OnPropertyChanged(nameof(RetroOptionsVisibility));
+        if (!_isInitialized) return;
+        SaveSettings();
+        RefreshDofusWindows();
+
+        // Gérer le listener selon le nouveau mode
+        if (!value && AutoFocusOnTurn)
+            _ = StartNotificationListenerAsync();
+        else
+            _notificationListener.Stop();
+    }
+
+    partial void OnAutoFocusOnTurnChanged(bool value)
+    {
+        if (!_isInitialized) return;
+        SaveSettings();
+
+        if (value && !IsUnityMode)
+            _ = StartNotificationListenerAsync();
+        else
+            _notificationListener.Stop();
+    }
+
+    private async Task StartNotificationListenerAsync()
+    {
+        var granted = await _notificationListener.RequestAccessAsync();
+        if (granted)
+            _notificationListener.Start();
+        else
+            // Accès refusé — désactiver silencieusement l'option
+            AutoFocusOnTurn = false;
+    }
+
+    private void OnNotificationTextReceived(object? sender, string text)
+    {
+        if (!AutoFocusOnTurn || IsUnityMode) return;
+
+        // L'événement peut venir d'un thread background → marshaling UI
+        _dispatcherQueue.TryEnqueue(() =>
+        {
+            // Le service ne transmet que le titre de la notif : "[CharacterName] - Dofus Retro v..."
+            // → le destinataire est toujours dans ce titre, simple Contains suffit
+            var match = DofusWindows.FirstOrDefault(w =>
+                text.Contains(w.WindowInfo.CharacterName, StringComparison.OrdinalIgnoreCase));
+
+            if (match == null) return;
+
+            if (!_focus.IsWindowValid(match.WindowInfo.Hwnd))
+            {
+                RefreshDofusWindows();
+                return;
+            }
+
+            if (IgnoreMinimizedWindows && _focus.IsWindowMinimized(match.WindowInfo.Hwnd))
+                return;
+
+            _focus.FocusWindow(match.WindowInfo.Hwnd);
+        });
+    }
+
     partial void OnSelectedLanguageIndexChanged(int value)
     {
         if (!_isInitialized) return;
@@ -176,18 +276,13 @@ public sealed partial class MainViewModel : ObservableObject
     private void ReregisterAllHotkeys()
     {
         _hotkeys.UnregisterAllHotkeys();
-        Debug.WriteLine($"[Hotkey] ReregisterAllHotkeys — Next=\"{NextWindowHotkey}\"  Prev=\"{PrevWindowHotkey}\"  fenêtres={DofusWindows.Count}");
 
         // Hotkeys globaux Next / Prev
         if (HotkeyParser.TryParse(NextWindowHotkey, out var nextMod, out var nextVk))
             _hotkeys.RegisterGlobalHotkey(HotkeyService.ID_NEXT_WINDOW, nextMod, nextVk);
-        else
-            Debug.WriteLine($"[Hotkey] TryParse ÉCHEC pour NextWindowHotkey=\"{NextWindowHotkey}\"");
 
         if (HotkeyParser.TryParse(PrevWindowHotkey, out var prevMod, out var prevVk))
             _hotkeys.RegisterGlobalHotkey(HotkeyService.ID_PREV_WINDOW, prevMod, prevVk);
-        else
-            Debug.WriteLine($"[Hotkey] TryParse ÉCHEC pour PrevWindowHotkey=\"{PrevWindowHotkey}\"");
 
         // Hotkeys directs par fenêtre (ID = ID_WINDOW_BASE + index)
         for (int i = 0; i < DofusWindows.Count; i++)
@@ -207,42 +302,25 @@ public sealed partial class MainViewModel : ObservableObject
 
     private void OnHotkeyTriggered(object? sender, HotkeyTriggeredEventArgs e)
     {
-        Debug.WriteLine($"[Hotkey] OnHotkeyTriggered — id={e.HotkeyId}  fenêtres={DofusWindows.Count}");
-
         if (e.HotkeyId == HotkeyService.ID_NEXT_WINDOW)
-        {
-            Debug.WriteLine("[Hotkey] → FocusNextWindow");
             FocusNextWindow();
-        }
         else if (e.HotkeyId == HotkeyService.ID_PREV_WINDOW)
-        {
-            Debug.WriteLine("[Hotkey] → FocusPrevWindow");
             FocusPrevWindow();
-        }
         else if (e.HotkeyId >= HotkeyService.ID_WINDOW_BASE)
         {
             int idx = e.HotkeyId - HotkeyService.ID_WINDOW_BASE;
-            Debug.WriteLine($"[Hotkey] → FocusWindow index={idx}");
             if (idx < DofusWindows.Count)
             {
                 var target = DofusWindows[idx];
                 if (!_focus.IsWindowValid(target.WindowInfo.Hwnd))
                 {
-                    Debug.WriteLine($"[Hotkey]   fenêtre invalide → refresh");
                     RefreshDofusWindows();
                     return;
                 }
                 if (IgnoreMinimizedWindows && _focus.IsWindowMinimized(target.WindowInfo.Hwnd))
-                {
-                    Debug.WriteLine($"[Hotkey]   fenêtre minimisée, ignorée");
                     return;
-                }
                 _focus.FocusWindow(target.WindowInfo.Hwnd);
             }
-        }
-        else
-        {
-            Debug.WriteLine($"[Hotkey] → id inconnu, ignoré");
         }
     }
 
@@ -256,15 +334,10 @@ public sealed partial class MainViewModel : ObservableObject
         {
             int idx = (currentIdx + i) % DofusWindows.Count;
             if (IgnoreMinimizedWindows && _focus.IsWindowMinimized(DofusWindows[idx].WindowInfo.Hwnd))
-            {
-                Debug.WriteLine($"[Focus] Next — idx={idx} minimisée, on saute");
                 continue;
-            }
-            Debug.WriteLine($"[Focus] Next — currentIdx={currentIdx}  nextIdx={idx}");
             FocusWindowAt(idx);
             return;
         }
-        Debug.WriteLine("[Focus] Next — toutes les fenêtres sont minimisées, rien à faire");
     }
 
     private void FocusPrevWindow()
@@ -278,38 +351,28 @@ public sealed partial class MainViewModel : ObservableObject
         {
             int idx = (currentIdx - i + DofusWindows.Count) % DofusWindows.Count;
             if (IgnoreMinimizedWindows && _focus.IsWindowMinimized(DofusWindows[idx].WindowInfo.Hwnd))
-            {
-                Debug.WriteLine($"[Focus] Prev — idx={idx} minimisée, on saute");
                 continue;
-            }
-            Debug.WriteLine($"[Focus] Prev — currentIdx={currentIdx}  prevIdx={idx}");
             FocusWindowAt(idx);
             return;
         }
-        Debug.WriteLine("[Focus] Prev — toutes les fenêtres sont minimisées, rien à faire");
     }
 
     private void FocusWindowAt(int index)
     {
         var target = DofusWindows[index];
-        Debug.WriteLine($"[Focus] FocusWindowAt({index}) — hwnd=0x{target.WindowInfo.Hwnd:X}  valid={_focus.IsWindowValid(target.WindowInfo.Hwnd)}");
         if (!_focus.IsWindowValid(target.WindowInfo.Hwnd))
         {
             RefreshDofusWindows();
             return;
         }
         if (IgnoreMinimizedWindows && _focus.IsWindowMinimized(target.WindowInfo.Hwnd))
-        {
-            Debug.WriteLine($"[Focus] FocusWindowAt({index}) — minimisée, ignorée (IgnoreMinimizedWindows=true)");
             return;
-        }
         _focus.FocusWindow(target.WindowInfo.Hwnd);
     }
 
     private int FindActiveWindowIndex()
     {
         var activeHwnd = _focus.GetForegroundWindow();
-        Debug.WriteLine($"[Focus] GetForegroundWindow=0x{activeHwnd:X}");
         for (int i = 0; i < DofusWindows.Count; i++)
         {
             if (DofusWindows[i].WindowInfo.Hwnd == activeHwnd)
@@ -376,6 +439,8 @@ public sealed partial class MainViewModel : ObservableObject
             LanguageIndex = SelectedLanguageIndex,
             IgnoreMinimizedWindows = IgnoreMinimizedWindows,
             AppTheme = AppTheme,
+            DofusMode = IsUnityMode ? DofusMode.Unity : DofusMode.Retro,
+            AutoFocusOnTurn = AutoFocusOnTurn,
             WindowWidth = _windowWidth,
             WindowHeight = _windowHeight,
             WindowOrder = [.. DofusWindows.Select(w => w.WindowInfo.CharacterName)],

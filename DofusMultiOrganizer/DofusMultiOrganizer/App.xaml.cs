@@ -66,6 +66,7 @@ public partial class App : Application
         services.AddSingleton<IWindowDetectionService, WindowDetectionService>();
         services.AddSingleton<IWindowFocusService, WindowFocusService>();
         services.AddSingleton<IHotkeyService, HotkeyService>();
+        services.AddSingleton<INotificationListenerService, NotificationListenerService>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainWindow>();
 
@@ -94,6 +95,7 @@ public partial class App : Application
     public static void ExitApp()
     {
         Services.GetRequiredService<IHotkeyService>().Dispose();
+        Services.GetRequiredService<INotificationListenerService>().Dispose();
         _mainWindow?.PrepareExit();
         _mainWindow?.DestroyTrayIcon();
         Current.Exit();

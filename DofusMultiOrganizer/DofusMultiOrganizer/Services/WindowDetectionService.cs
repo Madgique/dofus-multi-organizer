@@ -8,12 +8,18 @@ namespace DofusOrganizer.Services;
 
 public sealed class WindowDetectionService : IWindowDetectionService
 {
-    private const string TargetWindowClass = "UnityWndClass";
+    private const string UnityWindowClass = "UnityWndClass";
 
-    public IReadOnlyList<DofusWindowInfo> DetectDofusWindows()
+    // Dofus Rétro : client x64 (navigateur Chromium intégré) + client x86 (Shockwave Flash)
+    private static readonly HashSet<string> RetroWindowClasses =
+    [
+        "Chrome_WidgetWin_1",
+        "ShockwaveFlash"
+    ];
+
+    public IReadOnlyList<DofusWindowInfo> DetectDofusWindows(DofusMode mode)
     {
         var windows = new List<DofusWindowInfo>();
-        Debug.WriteLine("[Detection] ── EnumWindows start ──────────────────────");
 
         PInvoke.EnumWindows((hwnd, _) =>
         {
@@ -32,15 +38,19 @@ public sealed class WindowDetectionService : IWindowDetectionService
                 className = new string(classBuffer, 0, classLen);
             }
 
-            if (className != TargetWindowClass)
+            bool classMatches = mode == DofusMode.Unity
+                ? className == UnityWindowClass
+                : RetroWindowClasses.Contains(className);
+
+            if (!classMatches)
                 return true;
 
-            Debug.WriteLine($"[Detection] UnityWndClass trouvée — hwnd=0x{hwnd.Value:X}");
+            // Pour Rétro : vérifier que le processus est bien Dofus (filtre Chrome, Edge, Discord…)
+            if (mode == DofusMode.Retro && !IsDofusProcess(hwnd))
+                return true;
 
-            // 3. État minimisé (on garde la fenêtre mais on la marque)
+            // 3. État minimisé
             bool isMinimized = PInvoke.IsIconic(hwnd);
-            if (isMinimized)
-                Debug.WriteLine($"[Detection]   → minimisée (incluse avec marqueur)");
 
             // 4. Titre
             string title;
@@ -54,20 +64,17 @@ public sealed class WindowDetectionService : IWindowDetectionService
             }
 
             if (string.IsNullOrWhiteSpace(title))
-            {
-                Debug.WriteLine($"[Detection]   → ignorée (titre vide)");
                 return true;
-            }
 
-            Debug.WriteLine($"[Detection]   titre = \"{title}\"");
-            var (characterName, dofusClass) = ParseWindowTitle(title);
-            Debug.WriteLine($"[Detection]   → personnage=\"{characterName}\"  classe=\"{dofusClass}\"  minimisée={isMinimized}");
+            var (characterName, dofusClass) = mode == DofusMode.Unity
+                ? ParseUnityWindowTitle(title)
+                : ParseRetroWindowTitle(title);
+
             windows.Add(new DofusWindowInfo(hwnd, characterName, dofusClass, title, isMinimized));
 
             return true;
         }, (LPARAM)0);
 
-        Debug.WriteLine($"[Detection] ── {windows.Count} fenêtre(s) trouvée(s) ──────────────────────");
         return windows;
     }
 
@@ -75,7 +82,7 @@ public sealed class WindowDetectionService : IWindowDetectionService
     /// Parse "CharacterName - DofusClass [- Version - Config]".
     /// Exemple : "Madgique-F - Feca - 3.5.3.1 - Release" → ("Madgique-F", "Feca")
     /// </summary>
-    private static (string CharacterName, string DofusClass) ParseWindowTitle(string title)
+    private static (string CharacterName, string DofusClass) ParseUnityWindowTitle(string title)
     {
         var firstSep = title.IndexOf(" - ", StringComparison.Ordinal);
         if (firstSep <= 0)
@@ -88,5 +95,38 @@ public sealed class WindowDetectionService : IWindowDetectionService
         var dofusClass = secondSep > 0 ? rest[..secondSep].Trim() : rest.Trim();
 
         return (characterName, dofusClass);
+    }
+
+    /// <summary>
+    /// Retourne true si la fenêtre appartient à un processus dont le nom commence par "dofus".
+    /// Filtre les fausses détections : Chrome, Edge, Discord… qui partagent Chrome_WidgetWin_1.
+    /// </summary>
+    private static bool IsDofusProcess(HWND hwnd)
+    {
+        try
+        {
+            uint pid;
+            unsafe { PInvoke.GetWindowThreadProcessId(hwnd, &pid); }
+            var processName = Process.GetProcessById((int)pid).ProcessName;
+            return processName.StartsWith("dofus", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Parse titre Rétro.
+    /// Exemple : "Madgique - Dofus 1.35.5" → ("Madgique", "")
+    /// Exemple x86 (ShockwaveFlash) : "Madgique" → ("Madgique", "")
+    /// </summary>
+    private static (string CharacterName, string DofusClass) ParseRetroWindowTitle(string title)
+    {
+        var sep = title.IndexOf(" - Dofus", StringComparison.OrdinalIgnoreCase);
+        if (sep > 0)
+            return (title[..sep].Trim(), string.Empty);
+
+        return (title.Trim(), string.Empty);
     }
 }

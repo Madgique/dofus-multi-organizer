@@ -4,5 +4,5 @@ namespace DofusOrganizer.Services.Interfaces;
 
 public interface IWindowDetectionService
 {
-    IReadOnlyList<DofusWindowInfo> DetectDofusWindows();
+    IReadOnlyList<DofusWindowInfo> DetectDofusWindows(DofusMode mode);
 }

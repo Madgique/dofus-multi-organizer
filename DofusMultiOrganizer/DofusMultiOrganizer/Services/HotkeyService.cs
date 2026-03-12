@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using DofusOrganizer.Services.Interfaces;
 using DofusOrganizer.Views;
@@ -53,7 +52,6 @@ public sealed class HotkeyService : IHotkeyService
     {
         if (msg == WM_HOTKEY_MSG)
         {
-            Debug.WriteLine($"[Hotkey] WM_HOTKEY reçu — id={wParam}");
             HotkeyTriggered?.Invoke(this, new HotkeyTriggeredEventArgs { HotkeyId = (int)wParam });
             return 0;
         }
@@ -68,15 +66,7 @@ public sealed class HotkeyService : IHotkeyService
 
         bool ok = PInvoke.RegisterHotKey(hwnd, id, (HOT_KEY_MODIFIERS)modifiers, virtualKey);
         if (ok)
-        {
             _registeredIds.Add(id);
-            Debug.WriteLine($"[Hotkey] RegisterHotKey OK — id={id}  mod=0x{modifiers:X}  vk=0x{virtualKey:X}");
-        }
-        else
-        {
-            var err = Marshal.GetLastWin32Error();
-            Debug.WriteLine($"[Hotkey] RegisterHotKey ÉCHEC — id={id}  mod=0x{modifiers:X}  vk=0x{virtualKey:X}  err={err}");
-        }
         return ok;
     }
 
