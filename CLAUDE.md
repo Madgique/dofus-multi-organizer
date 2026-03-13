@@ -6,6 +6,7 @@ Ancien code de référence archivé dans `M:\Projets-Windows\dofus\tests\organiz
 
 ## Statut
 App lancée et fonctionnelle — build 0 erreur 0 warning, déploiement MSIX OK via F5 dans VS.
+Dernière release : **v1.1.1** (GitHub Releases)
 
 ## Build
 ```
@@ -14,6 +15,18 @@ dotnet build DofusMultiOrganizer.slnx -c Debug -p:Platform=x64 --verbosity minim
 ```
 ⚠️ Le `.slnx` est dans le **sous-dossier interne** : `…\DofusMultiOrganizer\DofusMultiOrganizer\` (deux niveaux de dossier avec le même nom).
 Le fichier solution est `.slnx` (nouveau format VS 2022), pas `.sln`.
+
+## Release MSIX (distribution)
+Workflow complet pour publier une nouvelle version :
+1. Bumper `Version` dans `Package.appxmanifest` (ex: `1.1.1.0` → `1.2.0.0`)
+2. **VS → Projet → Publier → Créer des packages d'application** → Sideloading → signer avec le cert store (thumbprint `2151898BC53AA3839C05F6D05EECE03F6162FDA4`) → entrer l'URL GitHub Releases → Créer
+3. Output dans `AppPackages/DofusMultiOrganizer_X.X.X.X_x64_Test/`
+4. Commiter + tag git + `gh release create vX.X.X` avec le `.msix` et le `.cer` en pièces jointes
+
+**Signature** : certificat auto-signé `CN=Madgique`, importé dans `Cert:\CurrentUser\My`.
+- Le pfx (`signing.pfx`, mdp: `dofus`) est à la racine du repo (gitignored)
+- Le cert public (`DofusMultiOrganizer.cer`) est commité — les utilisateurs doivent l'installer dans les Autorités racines de confiance avant d'installer le MSIX
+- `PublishTrimmed` : **TOUJOURS False** — le trimmer est incompatible avec WinUI 3 (crash 0x80131509)
 
 ## Architecture
 - **Stack** : C# / WinUI 3 (Windows App SDK 1.8.260209005) / MSIX packaged / net8.0-windows10.0.19041.0 / x64+x86+ARM64
@@ -110,4 +123,3 @@ Clés existantes (à compléter si nouvelles fonctionnalités) :
 
 ## Todo restant
 - Remplacer les assets PNG/ICO placeholder par de vraies icônes
-- Signer le package MSIX pour distribution
