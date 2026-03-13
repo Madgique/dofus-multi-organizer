@@ -11,7 +11,7 @@
   <Identity
     Name="dbfbf87b-1d83-42df-8525-84bccbb8176b"
     Publisher="CN=Madgique"
-    Version="1.1.0.0" />
+    Version="1.1.1.0" />
 
   <mp:PhoneIdentity PhoneProductId="dbfbf87b-1d83-42df-8525-84bccbb8176b" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
