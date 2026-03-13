@@ -18,11 +18,6 @@ public partial class App : Application
     // Mutex maintenu en vie pour toute la durée de l'app (sinon le GC le collecte)
     private static Mutex? _singleInstanceMutex;
 
-    public App()
-    {
-        InitializeComponent();
-    }
-
     private static readonly string[] LanguageCodes = ["fr-FR", "en-US", "pt-BR", "es-ES"];
 
     public static void ApplyLanguage(int index)
@@ -44,6 +39,11 @@ public partial class App : Application
         }
     }
 
+    public App()
+    {
+        InitializeComponent();
+    }
+
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         // Instance unique via Mutex (fonctionne avec ou sans MSIX)
@@ -54,13 +54,10 @@ public partial class App : Application
             return;
         }
 
-        // Charger les settings tôt pour appliquer la langue AVANT de créer l'UI
-        // (x:Uid utilise les ressources chargées au démarrage)
         var settingsService = new SettingsService();
         var earlySettings = settingsService.Load();
         ApplyLanguage(earlySettings.LanguageIndex);
 
-        // Construction du conteneur DI — réutiliser la même instance SettingsService
         var services = new ServiceCollection();
         services.AddSingleton<ISettingsService>(settingsService);
         services.AddSingleton<IWindowDetectionService, WindowDetectionService>();
@@ -69,20 +66,14 @@ public partial class App : Application
         services.AddSingleton<INotificationListenerService, NotificationListenerService>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainWindow>();
-
         Services = services.BuildServiceProvider();
 
-        // Créer la fenêtre principale — elle se cache d'elle-même au démarrage
         _mainWindow = Services.GetRequiredService<MainWindow>();
-
-        // Appliquer le thème après création de la fenêtre
         ApplyTheme(earlySettings.AppTheme);
 
-        // Initialiser le service de hotkeys (requiert le HWND de la fenêtre)
         var hotkeyService = Services.GetRequiredService<IHotkeyService>();
         hotkeyService.Initialize(_mainWindow);
 
-        // Charger les paramètres et enregistrer les hotkeys initiaux
         var viewModel = Services.GetRequiredService<MainViewModel>();
         viewModel.Initialize();
     }
