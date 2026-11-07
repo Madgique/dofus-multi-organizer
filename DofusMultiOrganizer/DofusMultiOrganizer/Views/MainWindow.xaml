@@ -66,12 +66,39 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock
-                    Grid.Column="0"
-                    x:Uid="Settings_WindowsTitle"
-                    Text="Fenêtres Dofus"
-                    Style="{ThemeResource SubtitleTextBlockStyle}"
-                    VerticalAlignment="Center" />
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock
+                        x:Uid="Settings_WindowsTitle"
+                        Text="Fenêtres Dofus"
+                        Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <!-- Légende des bordures de navigation (couleurs alignées sur DofusWindowViewModel) -->
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="#3B82F6" />
+                            <TextBlock
+                                x:Uid="Settings_LegendCurrent"
+                                FontSize="10"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="#22C55E" />
+                            <TextBlock
+                                x:Uid="Settings_LegendNext"
+                                FontSize="10"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="#F59E0B" />
+                            <TextBlock
+                                x:Uid="Settings_LegendPrevious"
+                                FontSize="10"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
                 <ToggleSwitch
                     Grid.Column="1"
                     x:Uid="Settings_ModeToggle"
@@ -125,6 +152,11 @@
 
             <!-- Hotkeys globaux + options de comportement -->
             <StackPanel Grid.Row="3" Spacing="8">
+                <InfoBar
+                    x:Uid="Settings_HotkeyConflict"
+                    IsOpen="{x:Bind ViewModel.HasHotkeyConflict, Mode=OneWay}"
+                    Severity="Warning"
+                    IsClosable="False" />
                 <TextBlock
                     x:Uid="Settings_GlobalHotkeys"
                     Text="Raccourcis globaux"

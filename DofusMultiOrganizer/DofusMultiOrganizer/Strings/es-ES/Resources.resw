@@ -18,6 +18,11 @@
   <data name="Settings_GlobalHotkeys.Text" xml:space="preserve"><value>Atajos globales</value></data>
   <data name="Settings_NextWindow.Text" xml:space="preserve"><value>Siguiente ventana</value></data>
   <data name="Settings_PrevWindow.Text" xml:space="preserve"><value>Ventana anterior</value></data>
+  <data name="Settings_HotkeyConflict.Title" xml:space="preserve"><value>Atajo no disponible</value></data>
+  <data name="Settings_HotkeyConflict.Message" xml:space="preserve"><value>No se pudo registrar un atajo: ya lo usa otra aplicación o está duplicado en tu configuración. Elige otra tecla.</value></data>
+  <data name="Settings_LegendCurrent.Text" xml:space="preserve"><value>Actual</value></data>
+  <data name="Settings_LegendNext.Text" xml:space="preserve"><value>Siguiente</value></data>
+  <data name="Settings_LegendPrevious.Text" xml:space="preserve"><value>Anterior</value></data>
   <data name="Settings_Language.Text" xml:space="preserve"><value>Idioma</value></data>
   <data name="Settings_Startup.Header" xml:space="preserve"><value>Iniciar con Windows</value></data>
   <data name="WindowRow_HotkeyPlaceholder" xml:space="preserve"><value>ej: F5, B, Ctrl+1</value></data>

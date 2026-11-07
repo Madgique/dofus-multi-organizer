@@ -5,9 +5,10 @@ Outil de multi-boxing pour Dofus — gestion des fenêtres et raccourcis clavier
 ## Fonctionnalités
 
 - **Détection automatique** des fenêtres Dofus ouvertes
-  - Mode **Unity** : classe Win32 `UnityWndClass`
+  - Mode **Unity** : classe Win32 `UnityWndClass` + processus `dofus*` (filtre les autres jeux Unity)
   - Mode **Rétro** : processus `dofus*` (client Chromium x64 ou Shockwave x86 — filtre Chrome/Edge/Discord)
 - **Raccourcis globaux** fenêtre suivante / précédente (cyclique)
+- **Indicateurs visuels** dans la liste : bordure bleue = fenêtre actuelle, verte = cible « suivant », orange = cible « précédent »
 - **Raccourci direct** par personnage (configurable individuellement)
 - **Réordonnancement** par drag & drop
 - **Capture de touche** : cliquer sur le champ de raccourci puis appuyer sur la touche souhaitée

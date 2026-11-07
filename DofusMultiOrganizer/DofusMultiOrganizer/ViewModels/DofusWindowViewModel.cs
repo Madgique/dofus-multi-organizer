@@ -11,6 +11,8 @@ using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Brush = Microsoft.UI.Xaml.Media.Brush;
+using Color = Windows.UI.Color;
 
 namespace DofusOrganizer.ViewModels;
 
@@ -39,6 +41,46 @@ public sealed partial class DofusWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private ImageSource? _windowIcon;
+
+    [ObservableProperty]
+    private WindowNavigationRole _navigationRole;
+
+    // Couleurs des indicateurs de navigation — doivent rester alignées avec la légende du XAML.
+    private static readonly SolidColorBrush TransparentBrush = new(Color.FromArgb(0, 0, 0, 0));
+    private static readonly SolidColorBrush CurrentBrush = new(Color.FromArgb(255, 59, 130, 246));  // bleu
+    private static readonly SolidColorBrush NextBrush = new(Color.FromArgb(255, 34, 197, 94));     // vert
+    private static readonly SolidColorBrush PreviousBrush = new(Color.FromArgb(255, 245, 158, 11)); // orange
+    private static readonly LinearGradientBrush NextAndPreviousBrush = CreateNextAndPreviousBrush();
+
+    /// <summary>
+    /// Bordure de la ligne : bleue = fenêtre actuelle, verte = cible de « suivant »,
+    /// orange = cible de « précédent ». Dégradé si les deux cibles sont la même fenêtre.
+    /// </summary>
+    public Brush NavigationBorderBrush => NavigationRole switch
+    {
+        WindowNavigationRole.Current => CurrentBrush,
+        WindowNavigationRole.Next => NextBrush,
+        WindowNavigationRole.Previous => PreviousBrush,
+        WindowNavigationRole.NextAndPrevious => NextAndPreviousBrush,
+        _ => TransparentBrush
+    };
+
+    partial void OnNavigationRoleChanged(WindowNavigationRole value)
+    {
+        OnPropertyChanged(nameof(NavigationBorderBrush));
+    }
+
+    private static LinearGradientBrush CreateNextAndPreviousBrush()
+    {
+        var brush = new LinearGradientBrush
+        {
+            StartPoint = new Windows.Foundation.Point(0, 0),
+            EndPoint = new Windows.Foundation.Point(1, 1)
+        };
+        brush.GradientStops.Add(new GradientStop { Color = Color.FromArgb(255, 34, 197, 94), Offset = 0 });
+        brush.GradientStops.Add(new GradientStop { Color = Color.FromArgb(255, 245, 158, 11), Offset = 1 });
+        return brush;
+    }
 
     public string CharacterName => WindowInfo.CharacterName;
     public string DofusClass => WindowInfo.DofusClass;

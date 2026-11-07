@@ -8,74 +8,80 @@
     xmlns:controls="using:DofusOrganizer.Views.Controls"
     mc:Ignorable="d">
 
-    <Grid ColumnSpacing="8" Padding="4,6" Opacity="{Binding RowOpacity}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="28" />
-            <ColumnDefinition Width="24" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="10" />
-            <ColumnDefinition Width="120" />
-        </Grid.ColumnDefinitions>
+    <!-- Bordure de navigation : bleu = actuelle, vert = suivante, orange = précédente -->
+    <Border
+        BorderBrush="{Binding NavigationBorderBrush}"
+        BorderThickness="2"
+        CornerRadius="6">
+        <Grid ColumnSpacing="8" Padding="4,6" Opacity="{Binding RowOpacity}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="28" />
+                <ColumnDefinition Width="24" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="120" />
+            </Grid.ColumnDefinitions>
 
-        <!-- Icône de la fenêtre Dofus -->
-        <Image
-            Grid.Column="0"
-            Source="{Binding WindowIcon}"
-            Width="22"
-            Height="22"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Stretch="Uniform" />
+            <!-- Icône de la fenêtre Dofus -->
+            <Image
+                Grid.Column="0"
+                Source="{Binding WindowIcon}"
+                Width="22"
+                Height="22"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Stretch="Uniform" />
 
-        <!-- Handle drag (icône) -->
-        <FontIcon
-            Grid.Column="1"
-            Glyph="&#xE784;"
-            FontSize="14"
-            VerticalAlignment="Center"
-            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            <!-- Handle drag (icône) -->
+            <FontIcon
+                Grid.Column="1"
+                Glyph="&#xE784;"
+                FontSize="14"
+                VerticalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
-        <!-- Nom du personnage + classe Dofus + tag minimisé -->
-        <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1">
-            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <TextBlock
-                    Text="{Binding CharacterName}"
-                    Style="{ThemeResource BodyStrongTextBlockStyle}"
-                    TextTrimming="CharacterEllipsis"
-                    VerticalAlignment="Center" />
-                <Border
-                    Visibility="{Binding MinimizedTagVisibility}"
-                    Background="{ThemeResource SystemFillColorNeutralBackgroundBrush}"
-                    CornerRadius="4"
-                    Padding="5,1"
-                    VerticalAlignment="Center">
+            <!-- Nom du personnage + classe Dofus + tag minimisé -->
+            <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <TextBlock
-                        Text="Réduit"
-                        FontSize="10"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                </Border>
+                        Text="{Binding CharacterName}"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}"
+                        TextTrimming="CharacterEllipsis"
+                        VerticalAlignment="Center" />
+                    <Border
+                        Visibility="{Binding MinimizedTagVisibility}"
+                        Background="{ThemeResource SystemFillColorNeutralBackgroundBrush}"
+                        CornerRadius="4"
+                        Padding="5,1"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            Text="Réduit"
+                            FontSize="10"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Border>
+                </StackPanel>
+                <TextBlock
+                    Text="{Binding DofusClass}"
+                    FontSize="11"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
-            <TextBlock
-                Text="{Binding DofusClass}"
-                FontSize="11"
-                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-        </StackPanel>
 
-        <!-- Indicateur de fenêtre active (point vert/rouge) -->
-        <Ellipse
-            Grid.Column="3"
-            Width="8"
-            Height="8"
-            VerticalAlignment="Center">
-            <Ellipse.Fill>
-                <SolidColorBrush Color="{Binding IsWindowAlive, Converter={StaticResource BoolToColorConverter}}" />
-            </Ellipse.Fill>
-        </Ellipse>
+            <!-- Indicateur de fenêtre active (point vert/rouge) -->
+            <Ellipse
+                Grid.Column="3"
+                Width="8"
+                Height="8"
+                VerticalAlignment="Center">
+                <Ellipse.Fill>
+                    <SolidColorBrush Color="{Binding IsWindowAlive, Converter={StaticResource BoolToColorConverter}}" />
+                </Ellipse.Fill>
+            </Ellipse>
 
-        <!-- Champ de raccourci configurable (capture à la volée) -->
-        <controls:HotkeyBox
-            Grid.Column="4"
-            Hotkey="{Binding Hotkey, Mode=TwoWay}"
-            VerticalAlignment="Center" />
-    </Grid>
+            <!-- Champ de raccourci configurable (capture à la volée) -->
+            <controls:HotkeyBox
+                Grid.Column="4"
+                Hotkey="{Binding Hotkey, Mode=TwoWay}"
+                VerticalAlignment="Center" />
+        </Grid>
+    </Border>
 </UserControl>

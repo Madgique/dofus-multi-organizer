@@ -45,8 +45,10 @@ public sealed class WindowDetectionService : IWindowDetectionService
             if (!classMatches)
                 return true;
 
-            // Pour Rétro : vérifier que le processus est bien Dofus (filtre Chrome, Edge, Discord…)
-            if (mode == DofusMode.Retro && !IsDofusProcess(hwnd))
+            // Vérifier que le processus est bien Dofus.
+            // - Rétro : filtre Chrome, Edge, Discord… (même classe Chrome_WidgetWin_1)
+            // - Unity : UnityWndClass est partagé par TOUS les jeux Unity (ex: MoonSweepers)
+            if (!IsDofusProcess(hwnd))
                 return true;
 
             // 3. État minimisé
@@ -99,7 +101,8 @@ public sealed class WindowDetectionService : IWindowDetectionService
 
     /// <summary>
     /// Retourne true si la fenêtre appartient à un processus dont le nom commence par "dofus".
-    /// Filtre les fausses détections : Chrome, Edge, Discord… qui partagent Chrome_WidgetWin_1.
+    /// Filtre les fausses détections : Chrome, Edge, Discord… (Chrome_WidgetWin_1)
+    /// et les autres jeux Unity (UnityWndClass).
     /// </summary>
     private static bool IsDofusProcess(HWND hwnd)
     {

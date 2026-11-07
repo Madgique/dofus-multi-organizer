@@ -18,6 +18,11 @@
   <data name="Settings_GlobalHotkeys.Text" xml:space="preserve"><value>Raccourcis globaux</value></data>
   <data name="Settings_NextWindow.Text" xml:space="preserve"><value>Fenêtre suivante</value></data>
   <data name="Settings_PrevWindow.Text" xml:space="preserve"><value>Fenêtre précédente</value></data>
+  <data name="Settings_HotkeyConflict.Title" xml:space="preserve"><value>Raccourci indisponible</value></data>
+  <data name="Settings_HotkeyConflict.Message" xml:space="preserve"><value>Un raccourci n'a pas pu être enregistré : il est déjà utilisé par une autre application ou en double dans vos réglages. Choisissez une autre touche.</value></data>
+  <data name="Settings_LegendCurrent.Text" xml:space="preserve"><value>Actuelle</value></data>
+  <data name="Settings_LegendNext.Text" xml:space="preserve"><value>Suivante</value></data>
+  <data name="Settings_LegendPrevious.Text" xml:space="preserve"><value>Précédente</value></data>
   <data name="Settings_Language.Text" xml:space="preserve"><value>Langue</value></data>
   <data name="Settings_Startup.Header" xml:space="preserve"><value>Démarrer avec Windows</value></data>
   <data name="WindowRow_HotkeyPlaceholder" xml:space="preserve"><value>ex: F5, B, Ctrl+1</value></data>

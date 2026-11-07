@@ -45,6 +45,13 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _autoFocusOnTurn;
 
+    /// <summary>
+    /// Vrai si au moins un raccourci global n'a pas pu être enregistré
+    /// (touche déjà utilisée par une autre application ou doublon dans les réglages).
+    /// </summary>
+    [ObservableProperty]
+    private bool _hasHotkeyConflict;
+
     /// <summary>Visibilité des options Rétro-only dans le XAML (x:Bind ne supporte pas les converters sur Window).</summary>
     public Microsoft.UI.Xaml.Visibility RetroOptionsVisibility =>
         IsUnityMode ? Microsoft.UI.Xaml.Visibility.Collapsed : Microsoft.UI.Xaml.Visibility.Visible;
@@ -94,6 +101,11 @@ public sealed partial class MainViewModel : ObservableObject
     private int _windowWidth = 540;
     private int _windowHeight = 620;
 
+    // Dernière fenêtre Dofus au premier plan — sert de point de départ à la navigation
+    // et reste mémorisée quand la fenêtre settings (ou une autre app) passe devant.
+    private nint _currentDofusHwnd;
+    private DispatcherQueueTimer? _foregroundTimer;
+
     /// <summary>Appelé par App.OnLaunched après l'initialisation du HotkeyService.</summary>
     public void Initialize()
     {
@@ -115,6 +127,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         RefreshStartupState();
         RefreshDofusWindows();
+        StartForegroundTracking();
 
         // Démarrer le listener si l'option était activée en mode Rétro
         if (!IsUnityMode && AutoFocusOnTurn)
@@ -151,6 +164,12 @@ public sealed partial class MainViewModel : ObservableObject
 
         DofusWindows.CollectionChanged += OnWindowOrderChanged;
 
+        // Oublier la fenêtre suivie si elle n'existe plus
+        if (_currentDofusHwnd != 0 &&
+            !DofusWindows.Any(w => w.WindowInfo.Hwnd == _currentDofusHwnd))
+            _currentDofusHwnd = 0;
+
+        UpdateNavigationIndicators();
         ReregisterAllHotkeys();
     }
 
@@ -161,6 +180,7 @@ public sealed partial class MainViewModel : ObservableObject
         for (int i = 0; i < DofusWindows.Count; i++)
             DofusWindows[i].OrderIndex = i + 1;
 
+        UpdateNavigationIndicators();
         ReregisterAllHotkeys();
         SaveSettings();
     }
@@ -188,6 +208,7 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnIgnoreMinimizedWindowsChanged(bool value)
     {
         if (!_isInitialized) return;
+        UpdateNavigationIndicators();
         SaveSettings();
     }
 
@@ -277,12 +298,14 @@ public sealed partial class MainViewModel : ObservableObject
     {
         _hotkeys.UnregisterAllHotkeys();
 
+        bool conflict = false;
+
         // Hotkeys globaux Next / Prev
         if (HotkeyParser.TryParse(NextWindowHotkey, out var nextMod, out var nextVk))
-            _hotkeys.RegisterGlobalHotkey(HotkeyService.ID_NEXT_WINDOW, nextMod, nextVk);
+            conflict |= !_hotkeys.RegisterGlobalHotkey(HotkeyService.ID_NEXT_WINDOW, nextMod, nextVk);
 
         if (HotkeyParser.TryParse(PrevWindowHotkey, out var prevMod, out var prevVk))
-            _hotkeys.RegisterGlobalHotkey(HotkeyService.ID_PREV_WINDOW, prevMod, prevVk);
+            conflict |= !_hotkeys.RegisterGlobalHotkey(HotkeyService.ID_PREV_WINDOW, prevMod, prevVk);
 
         // Hotkeys directs par fenêtre (ID = ID_WINDOW_BASE + index)
         for (int i = 0; i < DofusWindows.Count; i++)
@@ -291,13 +314,15 @@ public sealed partial class MainViewModel : ObservableObject
             if (!string.IsNullOrWhiteSpace(wvm.Hotkey) &&
                 HotkeyParser.TryParse(wvm.Hotkey, out var mod, out var vk))
             {
-                _hotkeys.RegisterWindowHotkey(
+                conflict |= !_hotkeys.RegisterWindowHotkey(
                     HotkeyService.ID_WINDOW_BASE + i,
                     mod,
                     vk,
                     wvm.WindowInfo.Hwnd);
             }
         }
+
+        HasHotkeyConflict = conflict;
     }
 
     private void OnHotkeyTriggered(object? sender, HotkeyTriggeredEventArgs e)
@@ -307,58 +332,28 @@ public sealed partial class MainViewModel : ObservableObject
         else if (e.HotkeyId == HotkeyService.ID_PREV_WINDOW)
             FocusPrevWindow();
         else if (e.HotkeyId >= HotkeyService.ID_WINDOW_BASE)
-        {
-            int idx = e.HotkeyId - HotkeyService.ID_WINDOW_BASE;
-            if (idx < DofusWindows.Count)
-            {
-                var target = DofusWindows[idx];
-                if (!_focus.IsWindowValid(target.WindowInfo.Hwnd))
-                {
-                    RefreshDofusWindows();
-                    return;
-                }
-                if (IgnoreMinimizedWindows && _focus.IsWindowMinimized(target.WindowInfo.Hwnd))
-                    return;
-                _focus.FocusWindow(target.WindowInfo.Hwnd);
-            }
-        }
+            FocusWindowAt(e.HotkeyId - HotkeyService.ID_WINDOW_BASE);
     }
 
     private void FocusNextWindow()
     {
-        if (DofusWindows.Count == 0) return;
-        int currentIdx = FindActiveWindowIndex();
-
-        // Parcourir vers l'avant jusqu'à trouver une fenêtre non-minimisée
-        for (int i = 1; i <= DofusWindows.Count; i++)
-        {
-            int idx = (currentIdx + i) % DofusWindows.Count;
-            if (IgnoreMinimizedWindows && _focus.IsWindowMinimized(DofusWindows[idx].WindowInfo.Hwnd))
-                continue;
+        int idx = FindNextIndex(FindCurrentIndex());
+        if (idx >= 0)
             FocusWindowAt(idx);
-            return;
-        }
     }
 
     private void FocusPrevWindow()
     {
-        if (DofusWindows.Count == 0) return;
-        int currentIdx = FindActiveWindowIndex();
-        if (currentIdx < 0) currentIdx = 0;
-
-        // Parcourir vers l'arrière jusqu'à trouver une fenêtre non-minimisée
-        for (int i = 1; i <= DofusWindows.Count; i++)
-        {
-            int idx = (currentIdx - i + DofusWindows.Count) % DofusWindows.Count;
-            if (IgnoreMinimizedWindows && _focus.IsWindowMinimized(DofusWindows[idx].WindowInfo.Hwnd))
-                continue;
+        int idx = FindPreviousIndex(FindCurrentIndex());
+        if (idx >= 0)
             FocusWindowAt(idx);
-            return;
-        }
     }
 
     private void FocusWindowAt(int index)
     {
+        if (index < 0 || index >= DofusWindows.Count)
+            return;
+
         var target = DofusWindows[index];
         if (!_focus.IsWindowValid(target.WindowInfo.Hwnd))
         {
@@ -367,10 +362,17 @@ public sealed partial class MainViewModel : ObservableObject
         }
         if (IgnoreMinimizedWindows && _focus.IsWindowMinimized(target.WindowInfo.Hwnd))
             return;
+
         _focus.FocusWindow(target.WindowInfo.Hwnd);
+        _currentDofusHwnd = target.WindowInfo.Hwnd;
+        UpdateNavigationIndicators();
     }
 
-    private int FindActiveWindowIndex()
+    /// <summary>
+    /// Fenêtre de départ de la navigation : la fenêtre Dofus réellement au premier plan,
+    /// sinon la dernière fenêtre Dofus mémorisée (settings ou autre application devant).
+    /// </summary>
+    private int FindCurrentIndex()
     {
         var activeHwnd = _focus.GetForegroundWindow();
         for (int i = 0; i < DofusWindows.Count; i++)
@@ -378,7 +380,109 @@ public sealed partial class MainViewModel : ObservableObject
             if (DofusWindows[i].WindowInfo.Hwnd == activeHwnd)
                 return i;
         }
+
+        if (_currentDofusHwnd != 0)
+        {
+            for (int i = 0; i < DofusWindows.Count; i++)
+            {
+                if (DofusWindows[i].WindowInfo.Hwnd == _currentDofusHwnd)
+                    return i;
+            }
+        }
+
         return -1;
+    }
+
+    private int FindNextIndex(int currentIdx) => FindCycleIndex(currentIdx, direction: 1);
+
+    private int FindPreviousIndex(int currentIdx) => FindCycleIndex(currentIdx, direction: -1);
+
+    /// <summary>
+    /// Cherche la prochaine fenêtre dans la direction donnée, en sautant les fenêtres
+    /// minimisées si l'option est active. Même logique pour le focus réel et les indicateurs.
+    /// </summary>
+    private int FindCycleIndex(int currentIdx, int direction)
+    {
+        int count = DofusWindows.Count;
+        if (count == 0) return -1;
+
+        // Depuis "aucune fenêtre Dofus active" : suivant → première, précédent → dernière
+        if (currentIdx < 0 && direction < 0)
+            currentIdx = 0;
+
+        for (int i = 1; i <= count; i++)
+        {
+            int idx = ((currentIdx + (direction * i)) % count + count) % count;
+            if (IgnoreMinimizedWindows && _focus.IsWindowMinimized(DofusWindows[idx].WindowInfo.Hwnd))
+                continue;
+            return idx;
+        }
+
+        return -1;
+    }
+
+    private void UpdateNavigationIndicators()
+    {
+        if (DofusWindows.Count == 0)
+            return;
+
+        int currentIdx = FindCurrentIndex();
+        int nextIdx = FindNextIndex(currentIdx);
+        int prevIdx = FindPreviousIndex(currentIdx);
+
+        for (int i = 0; i < DofusWindows.Count; i++)
+        {
+            WindowNavigationRole role;
+            if (i == currentIdx)
+                role = WindowNavigationRole.Current;
+            else if (i == nextIdx && i == prevIdx)
+                role = WindowNavigationRole.NextAndPrevious;
+            else if (i == nextIdx)
+                role = WindowNavigationRole.Next;
+            else if (i == prevIdx)
+                role = WindowNavigationRole.Previous;
+            else
+                role = WindowNavigationRole.None;
+
+            DofusWindows[i].NavigationRole = role;
+        }
+    }
+
+    private void StartForegroundTracking()
+    {
+        if (_foregroundTimer != null) return;
+
+        _foregroundTimer = _dispatcherQueue.CreateTimer();
+        _foregroundTimer.Interval = TimeSpan.FromMilliseconds(400);
+        _foregroundTimer.IsRepeating = true;
+        _foregroundTimer.Tick += OnForegroundTimerTick;
+        _foregroundTimer.Start();
+    }
+
+    private void OnForegroundTimerTick(DispatcherQueueTimer sender, object args)
+    {
+        var activeHwnd = _focus.GetForegroundWindow();
+        bool changed = false;
+
+        // Une fenêtre Dofus vient de passer au premier plan → mémoriser
+        if (activeHwnd != 0 &&
+            DofusWindows.Any(w => w.WindowInfo.Hwnd == activeHwnd) &&
+            _currentDofusHwnd != activeHwnd)
+        {
+            _currentDofusHwnd = activeHwnd;
+            changed = true;
+        }
+
+        // La fenêtre mémorisée a été fermée → oublier
+        if (_currentDofusHwnd != 0 &&
+            !DofusWindows.Any(w => w.WindowInfo.Hwnd == _currentDofusHwnd))
+        {
+            _currentDofusHwnd = 0;
+            changed = true;
+        }
+
+        if (changed)
+            UpdateNavigationIndicators();
     }
 
     [RelayCommand]

@@ -6,7 +6,7 @@ Ancien code de référence archivé dans `${WORKSPACE_PATH}\dofus\tests\organize
 
 ## Statut
 App lancée et fonctionnelle — build 0 erreur 0 warning, déploiement MSIX OK via F5 dans VS.
-Dernière release : **v1.1.1** (GitHub Releases)
+Dernière release : **v1.2.0** (GitHub Releases)
 
 ## Build
 ```
@@ -47,10 +47,11 @@ Views/Controls/HotkeyBox.xaml/.cs      — UserControl capture de touche (clic �
 ViewModels/MainViewModel.cs            — logique principale
 ViewModels/DofusWindowViewModel.cs
 Models/DofusMode.cs                    — enum Unity = 0, Retro = 1
+Models/WindowNavigationRole.cs         — rôle visuel d'une ligne (actuelle / suivante / précédente)
 Models/AppSettings.cs                  — settings persistés (DofusMode, AutoFocusOnTurn, etc.)
 Services/HotkeyService.cs              — WndProc subclassing manuel
-Services/WindowDetectionService.cs     — EnumWindows + filtre UnityWndClass (Unity) ou Chrome_WidgetWin_1/IsDofusProcess (Rétro)
-Services/WindowFocusService.cs         — AttachThreadInput + SetForegroundWindow
+Services/WindowDetectionService.cs     — EnumWindows + classe (UnityWndClass ou Chrome_WidgetWin_1/ShockwaveFlash) + IsDofusProcess (Unity + Rétro)
+Services/WindowFocusService.cs         — AttachThreadInput (foreground + cible) + SetForegroundWindow, garde-fou si déjà au premier plan
 Services/NotificationListenerService.cs — UserNotificationListener WinRT pour auto-focus Rétro
 Services/HotkeyParser.cs               — parse "Ctrl+F3" → (modifiers, vk) + Format inverse
 Services/SettingsService.cs            — JSON dans %LocalAppData%/DofusOrganizer/
@@ -86,16 +87,17 @@ Clés existantes (à compléter si nouvelles fonctionnalités) :
 - **GetKeyState** : retourne `short`, check `< 0` pour savoir si la touche est enfoncée
 - **RetroOptionsVisibility** : propriété calculée `Microsoft.UI.Xaml.Visibility` sur ViewModel (pas de converter XAML) — `Window` n'est pas `FrameworkElement` dans WinUI 3, donc `x:Bind` avec converter génère CS1503
 - **`_isInitialized` guard** : `OnPropertyChanged(nameof(RetroOptionsVisibility))` doit être appelé AVANT le guard pour corriger l'affichage au démarrage en mode Rétro
+- **Conflit de hotkey** : `RegisterHotKey` renvoie false si la touche est déjà prise → `MainViewModel.HasHotkeyConflict` alimente l'InfoBar d'avertissement dans les settings
 
 ## Dofus windows — Unity
-- Classe Win32 : `UnityWndClass` (filtre suffisant, pas besoin de vérifier le processus)
+- Classe Win32 : `UnityWndClass` + **filtre processus obligatoire** (`IsDofusProcess`) — `UnityWndClass` est partagé par tous les jeux Unity (ex: MoonSweepers), donc la classe seule suffit à détecter d'autres jeux
 - Format titre : `"CharacterName - DofusClass - Version - Release"` (ex: "Madgique-F - Feca - 3.5.3.1 - Release")
 - Parse : `IndexOf(" - ")` (premier séparateur) pour CharacterName, deuxième pour DofusClass
 - Ne PAS utiliser `LastIndexOf` — retournerait "Release" comme classe
 
 ## Dofus windows — Rétro
 - Classes Win32 : `Chrome_WidgetWin_1` (client x64, Chromium embarqué) + `ShockwaveFlash` (client x86, obsolète depuis Flash EOL 2020)
-- Filtre processus obligatoire : `IsDofusProcess()` → `Process.GetProcessById(pid).ProcessName.StartsWith("dofus")` — évite de catcher Chrome, Edge, Discord
+- Filtre processus obligatoire : `IsDofusProcess()` → `Process.GetProcessById(pid).ProcessName.StartsWith("dofus")` — évite de catcher Chrome, Edge, Discord (et les autres jeux Unity en mode Unity)
 - Format titre x64 : `"CharacterName - Dofus Retro v1.47.20"` → parse avec `IndexOf(" - Dofus", OrdinalIgnoreCase)`
 - Format titre x86 : `"CharacterName"` uniquement → pas de séparateur, retourner tel quel
 
@@ -115,6 +117,12 @@ Clés existantes (à compléter si nouvelles fonctionnalités) :
 - Touche normale → capture avec modificateurs (Ctrl/Shift/Alt/Win via GetKeyState)
 - Échap → annuler, Suppr/Backspace → effacer, perte focus → annuler
 - Touches modificatrices seules ignorées pendant la capture
+
+## Indicateurs de navigation (liste des fenêtres)
+- `DofusWindowViewModel.NavigationRole` → `NavigationBorderBrush` : bleu = fenêtre actuelle, vert = cible « suivant », orange = cible « précédent » (dégradé vert/orange si les deux cibles sont la même fenêtre)
+- `MainViewModel._currentDofusHwnd` mémorise la dernière fenêtre Dofus au premier plan, rafraîchie par un `DispatcherQueueTimer` (400 ms) — l'indicateur « actuelle » reste donc visible quand la fenêtre settings ou une autre app est devant
+- Le focus réel et les indicateurs utilisent la même logique `FindCycleIndex()` (avec saut des minimisées) → jamais de divergence entre ce qui est affiché et ce qui se passe
+- Si le premier plan n'est pas une fenêtre Dofus, la navigation repart de la dernière fenêtre Dofus mémorisée (et non plus de la première de la liste)
 
 ## Hotkeys (IDs dans HotkeyService)
 - `ID_NEXT_WINDOW = 1` — fenêtre suivante (cyclique)

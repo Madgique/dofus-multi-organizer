@@ -18,6 +18,11 @@
   <data name="Settings_GlobalHotkeys.Text" xml:space="preserve"><value>Global Hotkeys</value></data>
   <data name="Settings_NextWindow.Text" xml:space="preserve"><value>Next Window</value></data>
   <data name="Settings_PrevWindow.Text" xml:space="preserve"><value>Previous Window</value></data>
+  <data name="Settings_HotkeyConflict.Title" xml:space="preserve"><value>Hotkey unavailable</value></data>
+  <data name="Settings_HotkeyConflict.Message" xml:space="preserve"><value>A hotkey could not be registered: it is already used by another application or duplicated in your settings. Choose another key.</value></data>
+  <data name="Settings_LegendCurrent.Text" xml:space="preserve"><value>Current</value></data>
+  <data name="Settings_LegendNext.Text" xml:space="preserve"><value>Next</value></data>
+  <data name="Settings_LegendPrevious.Text" xml:space="preserve"><value>Previous</value></data>
   <data name="Settings_Language.Text" xml:space="preserve"><value>Language</value></data>
   <data name="Settings_Startup.Header" xml:space="preserve"><value>Start with Windows</value></data>
   <data name="WindowRow_HotkeyPlaceholder" xml:space="preserve"><value>e.g. F5, B, Ctrl+1</value></data>

@@ -76,9 +76,9 @@ public sealed class HotkeyService : IHotkeyService
             PInvoke.UnregisterHotKey(new HWND(_hwnd), id);
     }
 
-    public void RegisterWindowHotkey(int id, uint modifiers, uint virtualKey, nint targetHwnd)
+    public bool RegisterWindowHotkey(int id, uint modifiers, uint virtualKey, nint targetHwnd)
     {
-        RegisterGlobalHotkey(id, modifiers, virtualKey);
+        return RegisterGlobalHotkey(id, modifiers, virtualKey);
     }
 
     public void UnregisterAllHotkeys()

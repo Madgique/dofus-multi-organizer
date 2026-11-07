@@ -18,6 +18,11 @@
   <data name="Settings_GlobalHotkeys.Text" xml:space="preserve"><value>Atalhos globais</value></data>
   <data name="Settings_NextWindow.Text" xml:space="preserve"><value>Próxima janela</value></data>
   <data name="Settings_PrevWindow.Text" xml:space="preserve"><value>Janela anterior</value></data>
+  <data name="Settings_HotkeyConflict.Title" xml:space="preserve"><value>Atalho indisponível</value></data>
+  <data name="Settings_HotkeyConflict.Message" xml:space="preserve"><value>Não foi possível registrar um atalho: ele já é usado por outro aplicativo ou está duplicado nas suas configurações. Escolha outra tecla.</value></data>
+  <data name="Settings_LegendCurrent.Text" xml:space="preserve"><value>Atual</value></data>
+  <data name="Settings_LegendNext.Text" xml:space="preserve"><value>Próxima</value></data>
+  <data name="Settings_LegendPrevious.Text" xml:space="preserve"><value>Anterior</value></data>
   <data name="Settings_Language.Text" xml:space="preserve"><value>Idioma</value></data>
   <data name="Settings_Startup.Header" xml:space="preserve"><value>Iniciar com o Windows</value></data>
   <data name="WindowRow_HotkeyPlaceholder" xml:space="preserve"><value>ex: F5, B, Ctrl+1</value></data>
